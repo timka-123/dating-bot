@@ -1,12 +1,16 @@
-from aiogram import Router
+from os import environ
+
+from aiogram import Router, Bot
 from aiogram.filters import Command
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
+from aiohttp import ClientSession
 
 from keyboards.reg_kbs import name_kb, city_kb
 from keyboards.menu_kb import menu_kb
 from states import UserStates
 from database import create_user, get_user
+from dotenv import load_dotenv
 
 router = Router()
 
@@ -45,11 +49,40 @@ async def enter_city(message: Message, state: FSMContext):
 
 
 @router.message(UserStates.ENTER_INFO)
-async def enter_city(message: Message, state: FSMContext):
-    await state.update_data(info=message.text)
+async def upload_photo(message: Message, state: FSMContext):
+    await message.answer("Пожалуйста, пришли свою фотографию")
+    await state.update_data(about=message.text)
+    await state.set_state(UserStates.UPLOAD_PHOTO)
+
+
+@router.message(UserStates.UPLOAD_PHOTO, lambda m: True if m.photo else False)
+async def accept_data(message: Message, state: FSMContext, bot: Bot):
     data = await state.get_data()
-    create_user(user_id=message.from_user.id, name=data['name'],
-                about=data['info'], age=data['age'], city=data['city'])
     await state.clear()
-    await message.answer("Спасибо! Твоя анкета теперь в поиске",
-                         reply_markup=menu_kb())
+    load_dotenv()
+    file_id = message.photo[-1].file_id
+    file = await bot.get_file(file_id)
+    await bot.download_file(file.file_path, "image.jpg")
+    img_data = b""
+    with open("image.jpg", "rb") as file:
+        img_data += file.read()
+    async with ClientSession(headers={
+        "Content-Type": "image/jpeg"
+    }) as session:
+        response = await session.post(
+            url=f"https://www.filestackapi.com/api/store/S3?key={environ.get('FILESTACK_API_KEY')}",
+            data=open("image.jpg", "rb")
+        )
+        rdata = await response.json()
+        await session.close()
+    image_link = rdata['url']
+    create_user(
+        user_id=message.from_user.id,
+        name=data['name'],
+        about=data['about'],
+        photo_link=image_link,
+        age=data['age'],
+        city=data['city']
+    )
+    await message.answer("Успешно! Анкета добавлена в поиск!", reply_markup=menu_kb())
+

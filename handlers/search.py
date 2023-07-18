@@ -1,7 +1,7 @@
 from aiogram import Router, Bot
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Text
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, URLInputFile
 from aiogram.fsm.context import FSMContext
 
 from states import UserStates
@@ -24,9 +24,10 @@ async def search(message: Message, state: FSMContext):
         users=users
     )
     current_user = users[0]
-    await message.answer(
-        text=f"👤 Имя: {current_user.name}\n👍 Возраст: {current_user.age} лет\n📍 Город: {current_user.city}\n📄 О себе: {current_user.about}",
-        reply_markup=user_actions(current_user.id)
+    await message.answer_photo(
+        caption=f"👤 Имя: {current_user.name}\n👍 Возраст: {current_user.age} лет\n📍 Город: {current_user.city}\n📄 О себе: {current_user.about}",
+        reply_markup=user_actions(current_user.id),
+        photo=URLInputFile(current_user.photo_link)
     )
 
 
@@ -49,9 +50,10 @@ async def like_user(call: CallbackQuery, state: FSMContext, bot: Bot):
     try:
         current_user = users[data['index']]
     except:
+        await call.answer("✅ Вы просмотрели всех пользователей")
         await call.message.delete()
         await state.clear()
-        return await call.answer("✅ Вы просмотрели всех пользователей")
+        return
     await call.message.edit_text(
         text=f"👤 Имя: {current_user.name}\n👍 Возраст: {current_user.age} лет\n📍 Город: {current_user.city}\n📄 О себе: {current_user.about}",
         reply_markup=user_actions(current_user.id)
@@ -68,12 +70,15 @@ async def dislike_user(call: CallbackQuery, state: FSMContext, bot: Bot):
     try:
         current_user = users[data['index']]
     except:
+        await call.answer("✅ Вы просмотрели всех пользователей")
         await call.message.delete()
         await state.clear()
-        return await call.answer("✅ Вы просмотрели всех пользователей")
-    await call.message.edit_text(
-        text=f"👤 Имя: {current_user.name}\n👍 Возраст: {current_user.age} лет\n📍 Город: {current_user.city}\n📄 О себе: {current_user.about}",
-        reply_markup=user_actions(current_user.id)
+        return
+    await call.message.delete()
+    await call.message.answer_photo(
+        caption=f"👤 Имя: {current_user.name}\n👍 Возраст: {current_user.age} лет\n📍 Город: {current_user.city}\n📄 О себе: {current_user.about}",
+        reply_markup=user_actions(current_user.id),
+        photo=URLInputFile(current_user.photo_link)
     )
     await state.update_data(index=data['index'] + 1)
     await call.answer("👍 Отправлено")

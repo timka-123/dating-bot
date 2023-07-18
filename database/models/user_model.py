@@ -10,3 +10,4 @@ class User(Base):
     city = Column(String, nullable=False)
     about = Column(String, nullable=False)
     name = Column(String, nullable=False)
+    photo_link = Column(String, nullable=False)

@@ -7,7 +7,7 @@ def name_kb(user_name: str) -> ReplyKeyboardMarkup:
     builder.row(
         KeyboardButton(text=user_name)
     )
-    return builder.as_markup(resize_keyboard=True)
+    return builder.as_markup(resize_keyboard=True, one_time=True)
 
 
 def city_kb() -> ReplyKeyboardMarkup:
@@ -15,4 +15,4 @@ def city_kb() -> ReplyKeyboardMarkup:
     builder.row(
         KeyboardButton(text="Отправить геолокацию", request_location=True)
     )
-    return builder.as_markup(resize_keyboard=True)
+    return builder.as_markup(resize_keyboard=True, one_time=True)

@@ -7,3 +7,4 @@ class UserStates(StatesGroup):
     ENTER_CITY = State()
     ENTER_INFO = State()
     SEARCH_PEOPLE = State()
+    UPLOAD_PHOTO = State()
