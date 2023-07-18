@@ -10,3 +10,12 @@ def user_actions(user_id: int) -> InlineKeyboardMarkup:
         InlineKeyboardButton(text="⏹️", callback_data=f"stop"),
     )
     return builder.as_markup()
+
+
+def reply_actions(user_id: int) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(text="👍", callback_data=f"ans_like_{user_id}"),
+        InlineKeyboardButton(text="👎", callback_data=f"ans_dislike_{user_id}"),
+    )
+    return builder.as_markup()
